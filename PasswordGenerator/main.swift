@@ -46,8 +46,48 @@ while true {
     
     switch command {
     case .generate:
-        // TODO: реализовать генерацию пароля
-        print("generate (stub)") // временная заглушка, вместо реальной генерации пароля
+        guard settings.useDigits || settings.useUppercase || settings.useLowercase || settings.useSymbols else {
+            print("❌ Error: No character types enabled. Enable at least one (digits, uppercase, lowercase, symbols).")
+            continue
+        }
+        
+        let digits = Array("0123456789")
+        let uppercase = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        let lowercase = Array("abcdefghijklmnopqrstuvwxyz")
+        let symbols = Array("!@#$%^&*()_+-=[]{};':\",.<>?/")
+        
+        var requiredCharacters: [Character] = []
+        var allCharacters: [Character] = []
+        
+        if settings.useDigits {
+            requiredCharacters.append(digits.randomElement()!)
+            allCharacters.append(contentsOf: digits)
+        }
+        if settings.useUppercase {
+            requiredCharacters.append(uppercase.randomElement()!)
+            allCharacters.append(contentsOf: uppercase)
+        }
+        if settings.useLowercase {
+            requiredCharacters.append(lowercase.randomElement()!)
+            allCharacters.append(contentsOf: lowercase)
+        }
+        if settings.useSymbols {
+            requiredCharacters.append(symbols.randomElement()!)
+            allCharacters.append(contentsOf: symbols)
+        }
+        
+        var password = requiredCharacters
+        let remainingCount = settings.length - password.count
+        
+        for _ in 0..<remainingCount {
+            if let randomChar = allCharacters.randomElement() {
+                password.append(randomChar)
+            }
+        }
+        
+        password.shuffle()
+        let passwordString = String(password)
+        print("🔐 Generated password: \(passwordString)")
     case .setLength:
         guard parts.count == 3, parts[1] == "length" else { // проверяет, что ввели set length N (три части, вторая — "length")
             print("❌ Invalid format. Use: set length <N>")
