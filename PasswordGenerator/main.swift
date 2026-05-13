@@ -7,121 +7,107 @@
 
 import Foundation
 
-// Модель данных
-struct PasswordSettings { // структура хранит данные пароля: длина + исп.цифры+заглавные буквы + строчные буквы + использ.символы
-    var length: Int = 12
-    var useDigits: Bool = true
-    var useUppercase: Bool = true
-    var useLowercase: Bool = true
-    var useSymbols: Bool = false
+struct PasswordSettings {
+    var length = 12
+    var useDigits = true
+    var useUppercase = true
+    var useLowercase = true
+    var useSymbols = false
 }
 
-// Команды
-enum Command: String { // команды
-    case generate = "generate" // создать
-    case setLength = "set length" // установить длину
-    case toggleDigits = "toggle digits" //проверить наличие цифр
-    case toggleUppercase = "toggle uppercase" // проверить наличие заглавных букв
-    case toggleLowercase = "toggle lowercase" // проверить наличие строчных букв
-    case toggleSymbols = "toggle symbols" // проверить наличие символов
-    case showSettings = "show settings" // показать настройки пароля
-    case exit = "exit" // выход из программы
-}
+func generatePassword(_ settings: PasswordSettings) -> String? {
+    guard settings.useDigits || settings.useUppercase || settings.useLowercase || settings.useSymbols else { return nil }
 
-// Глобальные настройки
-var settings = PasswordSettings() //// создаём экземпляр структуры с настройками по умолчанию (длина 12, цифры и буквы включены, символы выключены)
+    let digits = Array("0123456789")
+    let uppercase = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    let lowercase = Array("abcdefghijklmnopqrstuvwxyz")
+    let symbols = Array("!@#$%^&*()_+-=[]{};':\",.<>?/")
 
-// Главный цикл
-while true {
-    print("\n> ", terminator: "")
-    guard let input = readLine()?.trimmingCharacters(in: .whitespaces), !input.isEmpty else { continue }
-    
-    let parts = input.split(separator: " ").map(String.init) // разбиваем ввод на части по пробелам (например, "set length 12" → ["set", "length", "12"])
-    let commandRaw = parts[0] // первая часть ввода — это название команды (например, "generate", "set", "toggle", "show")
-    
-    guard let command = Command(rawValue: commandRaw) else { // преобразуем строку команды в значение enum Command; если не получилось — ошибка
-        print("❌ Unknown command") // если введённая строка не соответствует ни одному case в enum Command
-        continue
+    var required: [Character] = []
+    var all: [Character] = []
+
+    if settings.useDigits { required.append(digits.randomElement()!); all += digits }
+    if settings.useUppercase { required.append(uppercase.randomElement()!); all += uppercase }
+    if settings.useLowercase { required.append(lowercase.randomElement()!); all += lowercase }
+    if settings.useSymbols { required.append(symbols.randomElement()!); all += symbols }
+
+    guard settings.length >= required.count else { return nil }
+
+    var password = required
+    for _ in 0..<(settings.length - required.count) {
+        password.append(all.randomElement()!)
     }
-    
-    switch command {
-    case .generate:
-        guard settings.useDigits || settings.useUppercase || settings.useLowercase || settings.useSymbols else {
-            print("❌ Error: No character types enabled. Enable at least one (digits, uppercase, lowercase, symbols).")
+
+    password.shuffle()
+    return String(password)
+}
+
+var passwordSettings = PasswordSettings()
+
+outer: while true {
+    print("\n> ", terminator: "")
+    let parts = (readLine() ?? "").split(separator: " ").map(String.init)
+    guard let cmd = parts.first else { continue }
+
+    switch cmd {
+    case "generate":
+        if let password = generatePassword(passwordSettings) {
+            print("🔐 Generated password: \(password)")
+        } else {
+            print("❌ Error: invalid settings")
+        }
+
+    case "set":
+        guard parts.count == 3, parts[1] == "length",
+              let n = Int(parts[2]), (8...20).contains(n) else {
+            print("❌ Use: set length <8...20>")
             continue
         }
-        
-        let digits = Array("0123456789")
-        let uppercase = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        let lowercase = Array("abcdefghijklmnopqrstuvwxyz")
-        let symbols = Array("!@#$%^&*()_+-=[]{};':\",.<>?/")
-        
-        var requiredCharacters: [Character] = []
-        var allCharacters: [Character] = []
-        
-        if settings.useDigits {
-            requiredCharacters.append(digits.randomElement()!)
-            allCharacters.append(contentsOf: digits)
-        }
-        if settings.useUppercase {
-            requiredCharacters.append(uppercase.randomElement()!)
-            allCharacters.append(contentsOf: uppercase)
-        }
-        if settings.useLowercase {
-            requiredCharacters.append(lowercase.randomElement()!)
-            allCharacters.append(contentsOf: lowercase)
-        }
-        if settings.useSymbols {
-            requiredCharacters.append(symbols.randomElement()!)
-            allCharacters.append(contentsOf: symbols)
-        }
-        
-        var password = requiredCharacters
-        let remainingCount = settings.length - password.count
-        
-        for _ in 0..<remainingCount {
-            if let randomChar = allCharacters.randomElement() {
-                password.append(randomChar)
-            }
-        }
-        
-        password.shuffle()
-        let passwordString = String(password)
-        print("🔐 Generated password: \(passwordString)")
-    case .setLength:
-        guard parts.count == 3, parts[1] == "length" else { // проверяет, что ввели set length N (три части, вторая — "length")
-            print("❌ Invalid format. Use: set length <N>")
+        passwordSettings.length = n
+        print("✅ Length set to \(n)")
+
+    case "toggle":
+        guard parts.count == 2 else {
+            print("❌ Use: toggle digits|uppercase|lowercase|symbols")
             continue
         }
-        guard let length = Int(parts[2]), length >= 8, length <= 20 else { //преобразует "12" в число 12, проверяет диапазон
-            print("❌ Length must be between 8 and 20")
+
+        switch parts[1] {
+        case "digits":
+            passwordSettings.useDigits.toggle()
+            print("✅ Digits: \(passwordSettings.useDigits ? "✅" : "❌")")
+        case "uppercase":
+            passwordSettings.useUppercase.toggle()
+            print("✅ Uppercase: \(passwordSettings.useUppercase ? "✅" : "❌")")
+        case "lowercase":
+            passwordSettings.useLowercase.toggle()
+            print("✅ Lowercase: \(passwordSettings.useLowercase ? "✅" : "❌")")
+        case "symbols":
+            passwordSettings.useSymbols.toggle()
+            print("✅ Symbols: \(passwordSettings.useSymbols ? "✅" : "❌")")
+        default:
+            print("❌ Unknown toggle option")
+        }
+
+    case "show":
+        guard parts.count == 2, parts[1] == "settings" else {
+            print("❌ Unknown command")
             continue
         }
-        settings.length = length // сохраняет новую длину
-        print("✅ Length set to \(length)") // подтверждение
-    case .toggleDigits:
-        settings.useDigits.toggle() // переключаем флаг использования цифр
-        print("✅ Digits: \(settings.useDigits ? "✅" : "❌")")
-    case .toggleUppercase:
-        settings.useUppercase.toggle()
-        print("✅ Uppercase: \(settings.useUppercase ? "✅" : "❌")")
-    case .toggleLowercase:
-        settings.useLowercase.toggle()
-        print("✅ Lowercase: \(settings.useLowercase ? "✅" : "❌")")
-    case .toggleSymbols:
-        settings.useSymbols.toggle()
-        print("✅ Symbols: \(settings.useSymbols ? "✅" : "❌")")
-    case .showSettings:
         print("""
         🔧 Settings:
-          Length: \(settings.length)
-          Digits: \(settings.useDigits ? "✅" : "❌")
-          Uppercase: \(settings.useUppercase ? "✅" : "❌")
-          Lowercase: \(settings.useLowercase ? "✅" : "❌")
-          Symbols: \(settings.useSymbols ? "✅" : "❌")
+          Length: \(passwordSettings.length)
+          Digits: \(passwordSettings.useDigits ? "✅" : "❌")
+          Uppercase: \(passwordSettings.useUppercase ? "✅" : "❌")
+          Lowercase: \(passwordSettings.useLowercase ? "✅" : "❌")
+          Symbols: \(passwordSettings.useSymbols ? "✅" : "❌")
         """)
-    case .exit:
+
+    case "exit":
         print("👋 Bye!")
-        
+        break outer
+
+    default:
+        print("❌ Unknown command")
     }
 }
