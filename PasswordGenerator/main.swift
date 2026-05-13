@@ -49,8 +49,16 @@ while true {
         // TODO: реализовать генерацию пароля
         print("generate (stub)") // временная заглушка, вместо реальной генерации пароля
     case .setLength:
-        // TODO: реализовать установку длины
-        print("set length (stub)")
+        guard parts.count == 3, parts[1] == "length" else { // проверяет, что ввели set length N (три части, вторая — "length")
+            print("❌ Invalid format. Use: set length <N>")
+            continue
+        }
+        guard let length = Int(parts[2]), length >= 8, length <= 20 else { //преобразует "12" в число 12, проверяет диапазон
+            print("❌ Length must be between 8 and 20")
+            continue
+        }
+        settings.length = length // сохраняет новую длину
+        print("✅ Length set to \(length)") // подтверждение
     case .toggleDigits:
         settings.useDigits.toggle() // переключаем флаг использования цифр
         print("✅ Digits: \(settings.useDigits ? "✅" : "❌")")
