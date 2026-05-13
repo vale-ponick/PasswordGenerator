@@ -8,7 +8,7 @@
 import Foundation
 
 // Модель данных
-struct PasswordSettings {
+struct PasswordSettings { // структура хранит данные пароля: длина + исп.цифры+заглавные буквы + строчные буквы + использ.символы
     var length: Int = 12
     var useDigits: Bool = true
     var useUppercase: Bool = true
@@ -17,42 +17,42 @@ struct PasswordSettings {
 }
 
 // Команды
-enum Command: String {
-    case generate = "generate"
-    case setLength = "set length"
-    case toggleDigits = "toggle digits"
-    case toggleUppercase = "toggle uppercase"
-    case toggleLowercase = "toggle lowercase"
-    case toggleSymbols = "toggle symbols"
-    case showSettings = "show settings"
-    case exit = "exit"
+enum Command: String { // команды
+    case generate = "generate" // создать
+    case setLength = "set length" // установить длину
+    case toggleDigits = "toggle digits" //проверить наличие цифр
+    case toggleUppercase = "toggle uppercase" // проверить наличие заглавных букв
+    case toggleLowercase = "toggle lowercase" // проверить наличие строчных букв
+    case toggleSymbols = "toggle symbols" // проверить наличие символов
+    case showSettings = "show settings" // показать настройки пароля
+    case exit = "exit" // выход из программы
 }
 
 // Глобальные настройки
-var settings = PasswordSettings()
+var settings = PasswordSettings() //// создаём экземпляр структуры с настройками по умолчанию (длина 12, цифры и буквы включены, символы выключены)
 
 // Главный цикл
 while true {
     print("\n> ", terminator: "")
     guard let input = readLine()?.trimmingCharacters(in: .whitespaces), !input.isEmpty else { continue }
     
-    let parts = input.split(separator: " ").map(String.init)
-    let commandRaw = parts[0]
+    let parts = input.split(separator: " ").map(String.init) // разбиваем ввод на части по пробелам (например, "set length 12" → ["set", "length", "12"])
+    let commandRaw = parts[0] // первая часть ввода — это название команды (например, "generate", "set", "toggle", "show")
     
-    guard let command = Command(rawValue: commandRaw) else {
-        print("❌ Unknown command")
+    guard let command = Command(rawValue: commandRaw) else { // преобразуем строку команды в значение enum Command; если не получилось — ошибка
+        print("❌ Unknown command") // если введённая строка не соответствует ни одному case в enum Command
         continue
     }
     
     switch command {
     case .generate:
-        // TODO
-        print("generate (stub)")
+        // TODO: реализовать генерацию пароля
+        print("generate (stub)") // временная заглушка, вместо реальной генерации пароля
     case .setLength:
-        // TODO
+        // TODO: реализовать установку длины
         print("set length (stub)")
     case .toggleDigits:
-        settings.useDigits.toggle()
+        settings.useDigits.toggle() // переключаем флаг использования цифр
         print("✅ Digits: \(settings.useDigits ? "✅" : "❌")")
     case .toggleUppercase:
         settings.useUppercase.toggle()
